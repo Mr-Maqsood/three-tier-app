@@ -11,7 +11,7 @@ services:
 
 
   backend:
-    image: ghcr.io/${mr-maqsood}/three-tier-app-backend:latest
+    image: 598130604652.dkr.ecr.us-east-1.amazonaws.com/three-tier-app-backend
     container_name: backend
     ports:
       - "5000:5000"
@@ -22,7 +22,7 @@ services:
 
 
   frontend:
-    image: ghcr.io/${mr-maqsood}/three-tier-app-frontend:latest
+    image: 598130604652.dkr.ecr.us-east-1.amazonaws.com/three-tier-app-frontend
     container_name: frontend
     ports:
       - "3000:3000"
