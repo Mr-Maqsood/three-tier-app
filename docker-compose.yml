@@ -3,7 +3,7 @@ version: '3.8'
 services:
   database:
     image: mongo
-    container_name: mongo-3
+    container_name: mongo-container-1
     ports:
       - "27017:27017"
     volumes:
@@ -12,9 +12,9 @@ services:
 
   backend:
     image: ${BACKEND_IMAGE}
-    container_name: backend-3
+    container_name: backend-container-1
     ports:
-      - "5002:5000"
+      - "5006:5000"
     depends_on:
       - database
     env_file:
@@ -22,10 +22,10 @@ services:
 
 
   frontend:
-    image: ${FRONTEND_IMAGE} 
-    container_name: frontend-3
+    image: ${FRONTEND_IMAGE}
+    container_name: frontend-container-1
     ports:
-      - "3002:3000"
+      - "3006:3000"
     depends_on:
       - backend
 volumes:
