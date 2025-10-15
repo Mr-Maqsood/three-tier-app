@@ -3,7 +3,7 @@ version: '3.8'
 services:
   database:
     image: mongo
-    container_name: mongo-1
+    container_name: mongo-4
     ports:
       - "27017:27017"
     volumes:
@@ -12,7 +12,7 @@ services:
 
   backend:
     image: ${BACKEND_IMAGE}
-    container_name: backend
+    container_name: backend-4
     ports:
       - "5003:5000"
     depends_on:
@@ -23,7 +23,7 @@ services:
 
   frontend:
     image: ${FRONTEND_IMAGE}
-    container_name: frontend
+    container_name: frontend-4
     ports:
       - "3003:3000"
     depends_on:
