@@ -3,7 +3,7 @@ version: '3.8'
 services:
   database:
     image: mongo
-    container_name: mongo-4
+    container_name: mongo
     ports:
       - "27017:27017"
     volumes:
@@ -12,9 +12,9 @@ services:
 
   backend:
     image: ${BACKEND_IMAGE}
-    container_name: backend-4
+    container_name: backend
     ports:
-      - "5004:5000"
+      - "5000:5000"
     depends_on:
       - database
     env_file:
@@ -25,7 +25,7 @@ services:
     image: ${FRONTEND_IMAGE}
     container_name: frontend-4
     ports:
-      - "3004:3000"
+      - "3000:3000"
     depends_on:
       - backend
 volumes:
