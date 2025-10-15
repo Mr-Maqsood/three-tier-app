@@ -71,6 +71,7 @@ pipeline {
                     branch 'prod'
                 }
             }
+            agent any
             steps {
                 input message: "Deploy to ${BRANCH_NAME} environment?", ok: "Yes, Deploy"
             }
