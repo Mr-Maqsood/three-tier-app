@@ -3,8 +3,7 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDENTIALS_ID = 'dockerhub_credentials'
-        BRANCH_NAME = "${env.BRANCH_NAME}"
-        IMAGE_TAG   = "${BRANCH_NAME}-${BUILD_NUMBER}"
+        IMAGE_TAG   = "${env.BRANCH_NAME}-${BUILD_NUMBER}"
         DOCKERHUB_USER = 'maqsoodbangash'
     }
 
@@ -54,12 +53,13 @@ pipeline {
         stage('Prepare .env for Compose') {
             steps {
                 script {
-                    writeFile( 
-                    file: '.env', 
-                    text: """
-                    BACKEND_IMAGE=${BACKEND_TAG_DH}
-                    FRONTEND_IMAGE=${FRONTEND_TAG_DH}
-                    """)
+                    writeFile(
+                        file: '.env',
+                        text: """
+                        BACKEND_IMAGE=${BACKEND_TAG_DH}
+                        FRONTEND_IMAGE=${FRONTEND_TAG_DH}
+                        """
+                    )
                 }
             }
         }
@@ -71,9 +71,12 @@ pipeline {
                     branch 'prod'
                 }
             }
-            agent any
             steps {
-                input message: "Deploy to ${BRANCH_NAME} environment?", ok: "Yes, Deploy"
+                script {
+                    timeout(time: 10, unit: 'MINUTES') {
+                        input message: "🚀 Deploy to ${env.BRANCH_NAME} environment?", ok: "Yes, Deploy"
+                    }
+                }
             }
         }
 
@@ -81,7 +84,7 @@ pipeline {
             steps {
                 sh """
                     docker-compose --env-file .env down
-  				docker-compose --env-file .env pull
+                    docker-compose --env-file .env pull
                     docker-compose --env-file .env up -d --remove-orphans
                 """
             }
@@ -98,10 +101,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ ${BRANCH_NAME} environment deployed successfully using Docker Hub images!"
+            echo "✅ ${env.BRANCH_NAME} environment deployed successfully using Docker Hub images!"
         }
         failure {
-            echo "❌ Deployment failed for ${BRANCH_NAME}. Check logs."
+            echo "❌ Deployment failed for ${env.BRANCH_NAME}. Check logs."
         }
     }
 }
