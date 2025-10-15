@@ -54,12 +54,12 @@ pipeline {
         stage('Prepare .env for Compose') {
             steps {
                 script {
-                    writeFile 
+                    writeFile( 
                     file: '.env', 
                     text: """
                     BACKEND_IMAGE=${BACKEND_TAG_DH}
                     FRONTEND_IMAGE=${FRONTEND_TAG_DH}
-                    """
+                    """)
                 }
             }
         }
