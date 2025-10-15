@@ -1,49 +1,96 @@
-@Library('sharedLib') _
 pipeline {
     agent any
 
     environment {
-        BRANCH_NAME = 'main'
-        IMAGE_TAG    = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
-        COMPOSE_FILE = "docker-compose.yml"
+        DOCKERHUB_CREDENTIALS_ID = 'dockerhub_credentials'
+        BRANCH_NAME = "${env.BRANCH_NAME}"
+        IMAGE_TAG   = "${BRANCH_NAME}-${BUILD_NUMBER}"
+        DOCKERHUB_USER = 'maqsoodbangash'
     }
 
     stages {
-        stage('Checkout') {
+
+        stage('Checkout Source') {
             steps {
-                checkoutSource()
+                checkout scm
             }
         }
-        stage('Docker Login') {
+
+        stage('Docker Hub Login') {
             steps {
-                dockerLogin('dockerhub-credentials')
-            }
-        }
-        stage('Build Images') {
-            steps {
-                buildImages('./backend', './frontend', IMAGE_TAG)
-            }
-        }
-        stage('Push Images') {
-            steps {
-                pushImages()
-            }
-        }
-        stage('Prepare .env') {
-            steps {
-                prepareEnvFile()
-            }
-        }
-        stage('Deploy') {
-            steps {
-                script {
-                    deployApp(COMPOSE_FILE, env.BRANCH_NAME)
+                withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS_ID}",
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_PASS')]) {
+                    sh '''
+                        echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USER --password-stdin
+                    '''
                 }
             }
         }
-        stage('Cleanup') {
+
+        stage('Build & Tag Images') {
             steps {
-                cleanupImages()
+                script {
+                    env.FRONTEND_TAG_DH = "${DOCKERHUB_USER}/three-tier-app-frontend:${IMAGE_TAG}"
+                    env.BACKEND_TAG_DH  = "${DOCKERHUB_USER}/three-tier-app-backend:${IMAGE_TAG}"
+
+                    sh """
+                        docker build -t ${BACKEND_TAG_DH} ./backend
+                        docker build -t ${FRONTEND_TAG_DH} ./frontend
+                    """
+                }
+            }
+        }
+
+        stage('Push Images to Docker Hub') {
+            steps {
+                sh """
+                    docker push ${BACKEND_TAG_DH}
+                    docker push ${FRONTEND_TAG_DH}
+                """
+            }
+        }
+
+        stage('Prepare .env for Compose') {
+            steps {
+                script {
+                    writeFile( 
+                    file: '.env', 
+                    text: """
+                    BACKEND_IMAGE=${BACKEND_TAG_DH}
+                    FRONTEND_IMAGE=${FRONTEND_TAG_DH}
+                    """)
+                }
+            }
+        }
+
+        stage('Approval for Staging / Prod Deploy') {
+            when {
+                anyOf {
+                    branch 'stg'
+                    branch 'prod'
+                }
+            }
+            steps {
+                input message: "Deploy to ${BRANCH_NAME} environment?", ok: "Yes, Deploy"
+            }
+        }
+
+        stage('Deploy Environment') {
+            steps {
+                sh """
+                    docker-compose --env-file .env down
+  				docker-compose --env-file .env pull
+                    docker-compose --env-file .env up -d --remove-orphans
+                """
+            }
+        }
+
+        stage('Cleanup Local Images') {
+            steps {
+                sh """
+                    docker rmi ${BACKEND_TAG_DH} ${FRONTEND_TAG_DH} || true
+                """
             }
         }
     }
