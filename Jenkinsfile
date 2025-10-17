@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'ec2-prod' }
 
     environment {
         DOCKERHUB_CREDENTIALS_ID = 'dockerhub_credentials'
