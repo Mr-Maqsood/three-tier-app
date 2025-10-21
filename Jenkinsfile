@@ -5,7 +5,7 @@ pipeline {
 
     environment { 
         BRANCH_NAME = 'main'
-        IMAGE_TAG    = "main-${env.BUILD_NUMBER}"
+        IMAGE_TAG    = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
         COMPOSE_FILE = "docker-compose.${env.BRANCH_NAME}.yml"
     }
 
@@ -54,7 +54,7 @@ pipeline {
         stage('Deploy Application') {
             steps {
                 script {
-                    deployApp(env.COMPOSE_FILE, 'main')
+                    deployApp(env.COMPOSE_FILE, env.BRANCH_NAME)
                 }
             }
         }
